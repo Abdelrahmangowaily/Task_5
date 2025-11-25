@@ -128,7 +128,27 @@ export async function updatePerk(req, res, next) {
     res.json({ perk: doc });
   } catch (err) { next(err); }
 }
+
+
 // TODO 1: Implement delete a perk by ID
+// Delete a perk by ID
 export async function deletePerk(req, res, next) {
- 
+  try {
+    if (!req.user?.id) return res.status(401).json({ message: 'Unauthorized' });
+
+    const perk = await Perk.findById(req.params.id);
+    if (!perk) return res.status(404).json({ message: 'Perk not found' });
+
+    // ensure the logged-in user owns the perk
+    if (String(perk.createdBy) !== String(req.user.id)) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    await Perk.deleteOne({ _id: perk._id });
+
+    res.json({ message: 'Perk deleted' });
+  } catch (err) {
+    next(err);
+  }
 }
+
